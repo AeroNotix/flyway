@@ -1,0 +1,12 @@
+{application, flyway,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { flyway_app, []}},
+  {env, []}
+ ]}.
