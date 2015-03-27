@@ -30,21 +30,26 @@ run_migrations(Path) ->
                 case pgsql:equery(Worker, LockTable) of
                     {ok, _, _} ->
                         put(pg_worker, Worker),
-                        err_pipe([fun sort_migrations/1, fun compile_migrations/1,
-                                  fun validate_migrations/1, fun execute_migrations/1],
-                                 MigrationFiles);
+                        try
+                            err_pipe([fun sort_migrations/1, fun compile_migrations/1,
+                                      fun validate_migrations/1, fun execute_migrations/1],
+                                     MigrationFiles)
+                        after
+                            erase(pg_worker)
+                        end;
                     {error, _} = E->
                         E
                 end
         end,
     case epgsql_poolboy:with_transaction(?MODULE, MigrationInTransaction) of
-        {ok, _, _} ->
+        ok ->
             ok;
         {error, #error{code = ?MUTEX_GRAB_FAIL}} ->
-            timer:sleep(5000);
+            timer:sleep(5000),
+            run_migrations(Path);
         {error, #error{code = Code}} ->
-            io:format("Error ass code: ~p~n", [Code]),
-            ok
+            {error, flyway_postgres_codes:code_to_atom(Code)};
+        O -> O
     end.
 
 sort_migrations(Migrations) ->
@@ -71,26 +76,41 @@ extract_mod_name(Migration) ->
 
 execute_migrations(Migrations) ->
     Worker = get(pg_worker),
-    try
-        ToExecute =
-            [fun () ->run_query(Worker, Migration:forwards()) end || Migration <- Migrations],
-        case thread_calls(ToExecute) of
-            ok ->
-                {ok, ok};
-            {error, _} = E->
-                E
-        end
-    after
-        erase(pg_worker)
+    ToExecute =
+        [fun() ->
+                 case has_migration_ran(Migration) of
+                     true ->
+                         ok;
+                     false ->
+                         run_query(Worker, Migration:forwards())
+                 end
+         end || Migration <- Migrations],
+    case thread_calls(ToExecute) of
+        ok ->
+            {ok, ok};
+        {error, _} = E->
+            E
     end.
 
 run_query(Worker, Query) ->
     pgsql:equery(Worker, Query, []).
 
+has_migration_ran(Migration) ->
+    Worker = get(pg_worker),
+    HasRanQuery = "SELECT has_ran FROM flyway_migrations.migrations WHERE name = $1",
+    case pgsql:equery(Worker, HasRanQuery, [Migration]) of
+        {ok, []} ->
+            false;
+        {ok, [HasRan]} ->
+            HasRan
+    end.
+
 thread_calls([]) ->
     ok;
 thread_calls([Fn|Fns]) ->
     case Fn() of
+        ok ->
+            thread_calls(Fns);
         {ok, _} ->
             thread_calls(Fns);
         {ok, _, _} ->
