@@ -1,0 +1,3 @@
+:name "flyway"
+:lib-dirs '("deps")
+:start-command "make console"
