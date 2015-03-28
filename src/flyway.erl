@@ -109,11 +109,8 @@ thread_calls([]) ->
     ok;
 thread_calls([Fn|Fns]) ->
     case Fn() of
-        ok ->
-            thread_calls(Fns);
-        {ok, _} ->
-            thread_calls(Fns);
-        {ok, _, _} ->
+        Res when Res == ok orelse
+                 element(1, Res) == ok ->
             thread_calls(Fns);
         {error, _} = E ->
             E
