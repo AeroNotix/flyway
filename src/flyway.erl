@@ -5,6 +5,7 @@
 -include_lib("epgsql/include/pgsql.hrl").
 -define(MUTEX_GRAB_FAIL, <<"55P03">>).
 
+
 migrate(App, PoolName) ->
     case code:priv_dir(App) of
         {error, bad_name} ->
