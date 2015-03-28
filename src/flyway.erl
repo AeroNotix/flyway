@@ -5,25 +5,17 @@
 -include_lib("epgsql/include/pgsql.hrl").
 -define(MUTEX_GRAB_FAIL, <<"55P03">>).
 
-migrate(App) ->
+migrate(App, PoolName) ->
     case code:priv_dir(App) of
         {error, bad_name} ->
             {error, unknown_app};
         Path when is_list(Path) ->
-            run_migrations(Path)
+            run_migrations(Path, PoolName)
     end.
 
-run_migrations(Path) ->
+run_migrations(Path, PoolName) ->
     MigrationFiles = filelib:wildcard(Path ++ "/**/migration_*.erl"),
     %% Have these opts passed in
-    PSQLWorkerOpts = [{size, 1}],
-    PSQLConnectionOpts =
-        [{username, "ubic"},
-         {password, "ubic"},
-         {host,     "localhost"},
-         {opts, [{database, "flyway_migrations"}]}],
-    epgsql_poolboy:start_pool(?MODULE, PSQLWorkerOpts,
-                              PSQLConnectionOpts),
     MigrationInTransaction =
         fun(Worker) ->
                 LockTable = "LOCK TABLE migrations IN ACCESS EXCLUSIVE MODE NOWAIT",
@@ -42,12 +34,12 @@ run_migrations(Path) ->
                         E
                 end
         end,
-    case epgsql_poolboy:with_transaction(?MODULE, MigrationInTransaction) of
+    case epgsql_poolboy:with_transaction(PoolName, MigrationInTransaction) of
         ok ->
             ok;
         {error, #error{code = ?MUTEX_GRAB_FAIL}} ->
             timer:sleep(5000),
-            run_migrations(Path);
+            run_migrations(Path, PoolName);
         {error, #error{code = Code}} ->
             {error, flyway_postgres_codes:code_to_atom(Code)};
         O -> O
