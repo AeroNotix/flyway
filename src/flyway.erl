@@ -31,8 +31,9 @@ run_migrations(Path) ->
                     {ok, _, _} ->
                         put(pg_worker, Worker),
                         try
-                            err_pipe([fun sort_migrations/1, fun compile_migrations/1,
-                                      fun validate_migrations/1, fun execute_migrations/1],
+                            err_pipe([fun sort_migrations/1,
+                                      fun compile_migrations/1,
+                                      fun execute_migrations/1],
                                      MigrationFiles)
                         after
                             erase(pg_worker)
@@ -67,9 +68,6 @@ compile_migrations(Migrations) ->
           compile:file(Migration),
           extract_mod_name(Migration)
       end || Migration <- Migrations]}.
-
-validate_migrations(Migrations) ->
-    {ok, Migrations}.
 
 extract_mod_name(Migration) ->
     list_to_atom(filename:basename(Migration, ".erl")).
