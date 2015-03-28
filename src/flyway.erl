@@ -15,7 +15,6 @@ migrate(App, PoolName) ->
 
 run_migrations(Path, PoolName) ->
     MigrationFiles = filelib:wildcard(Path ++ "/**/migration_*.erl"),
-    %% Have these opts passed in
     MigrationInTransaction =
         fun(Worker) ->
                 LockTable = "LOCK TABLE migrations IN ACCESS EXCLUSIVE MODE NOWAIT",
