@@ -29,8 +29,8 @@ run_migrations(Path) ->
                 LockTable = "LOCK TABLE migrations IN ACCESS EXCLUSIVE MODE NOWAIT",
                 case pgsql:equery(Worker, LockTable) of
                     {ok, _, _} ->
-                        put(pg_worker, Worker),
                         try
+                            put(pg_worker, Worker),
                             err_pipe([fun sort_migrations/1,
                                       fun compile_migrations/1,
                                       fun execute_migrations/1],
