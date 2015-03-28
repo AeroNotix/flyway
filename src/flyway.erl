@@ -101,8 +101,8 @@ has_migration_ran(Migration) ->
     case pgsql:equery(Worker, HasRanQuery, [Migration]) of
         {ok, []} ->
             false;
-        {ok, [HasRan]} ->
-            HasRan
+        {ok, [_]} ->
+            true
     end.
 
 thread_calls([]) ->
