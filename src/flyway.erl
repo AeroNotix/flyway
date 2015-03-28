@@ -77,14 +77,7 @@ extract_mod_name(Migration) ->
 execute_migrations(Migrations) ->
     Worker = get(pg_worker),
     ToExecute =
-        [fun() ->
-                 case has_migration_ran(Migration) of
-                     true ->
-                         ok;
-                     false ->
-                         run_query(Worker, Migration:forwards())
-                 end
-         end || Migration <- Migrations],
+        [run_query(Worker, Migration) || Migration <- Migrations],
     case thread_calls(ToExecute) of
         ok ->
             {ok, ok};
@@ -92,8 +85,21 @@ execute_migrations(Migrations) ->
             E
     end.
 
-run_query(Worker, Query) ->
-    pgsql:equery(Worker, Query, []).
+run_query(Worker, Migration) ->
+    case has_migration_ran(Migration) of
+        true ->
+            ok;
+        false ->
+            case pgsql:equery(Worker, Migration:forwards()) of
+                {error, E} ->
+                    error(E);
+                %% There are multiple ok type responses :(
+                Res when element(1, Res) == ok ->
+                    Insert = "INSERT INTO migrations (name) VALUES($1)",
+                    {ok, _} = pgsql:equery(Worker, Insert, [atom_to_list(Migration)]),
+                    Res
+            end
+    end.
 
 has_migration_ran(Migration) ->
     Worker = get(pg_worker),
