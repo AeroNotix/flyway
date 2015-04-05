@@ -19,7 +19,7 @@ console:
 deps:
 	$(REBAR) get-deps
 
-ensure-database-exists:
+create-database:
 	@if [ `psql -l -U flyway | grep flyway_migrations  | wc -l` -eq 0 ]; then \
 		createdb -U flyway flyway_migrations; \
 	fi
@@ -28,7 +28,7 @@ ensure-database-exists:
 distclean: clean
 	$(REBAR) delete-deps
 
-test: ensure-database-exists
+test:
 	$(REBAR) skip_deps=true ct
 
 dialyzer: compile
