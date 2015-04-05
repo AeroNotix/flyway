@@ -126,7 +126,6 @@ has_migration_ran(Migration) ->
         {ok, [_]} ->
             true
     end.
-
 thread_calls([]) ->
     ok;
 thread_calls([Fn|Fns]) ->
