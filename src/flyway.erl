@@ -27,7 +27,8 @@ run_migrations(Path, PoolName) ->
                     {ok, _, _} ->
                         try
                             put(pg_worker, Worker),
-                            err_pipe([fun sort_migrations/1,
+                            err_pipe([fun initialize_migrations/1,
+                                      fun sort_migrations/1,
                                       fun compile_migrations/1,
                                       fun execute_migrations/1],
                                      MigrationFiles)
@@ -47,6 +48,27 @@ run_migrations(Path, PoolName) ->
         {error, #error{code = Code}} ->
             {error, flyway_postgres_codes:code_to_atom(Code)};
         O -> O
+    end.
+
+initialize_migrations(Migrations) ->
+    case initialize_flyway_schema() of
+        ok ->
+            {ok, Migrations};
+        {error, _} = E ->
+            error(E)
+    end.
+
+initialize_flyway_schema() ->
+    Worker = get(pg_worker),
+    FlywayPriv = code:priv_dir(flyway),
+    {ok, Schema} = filename:join(FlywayPriv, "schema.sql"),
+    case pgsql:equery(Worker, binary_to_list(Schema)) of
+        {ok, _} ->
+            ok;
+        {error, #error{code = ?TABLE_EXISTS}} ->
+            ok;
+        {error, _} = E ->
+            E
     end.
 
 sort_migrations(Migrations) ->
