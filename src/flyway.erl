@@ -24,7 +24,6 @@ run_migrations(Path, PoolName) ->
     MigrationInTransaction =
         fun(Worker) ->
                 put(pg_worker, Worker),
-                ok = initialize_flyway_schema(),
                 LockTable = "LOCK TABLE migrations IN ACCESS EXCLUSIVE MODE NOWAIT",
                 case pgsql:equery(Worker, LockTable) of
                     {ok, _, _} ->
@@ -40,6 +39,7 @@ run_migrations(Path, PoolName) ->
                         E
                 end
         end,
+    poolboy:transaction(PoolName, fun initialize_flyway_schema/1),
     case epgsql_poolboy:with_transaction(PoolName, MigrationInTransaction) of
         ok ->
             ok;
