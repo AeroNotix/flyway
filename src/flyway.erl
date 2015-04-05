@@ -4,6 +4,7 @@
 
 -include_lib("epgsql/include/pgsql.hrl").
 -define(MUTEX_GRAB_FAIL, <<"55P03">>).
+-define(TABLE_EXISTS, <<"42P07">>).
 
 
 migrate(App, PSQLConnectionOpts) when is_list(PSQLConnectionOpts) ->
