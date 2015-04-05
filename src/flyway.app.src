@@ -5,7 +5,8 @@
   {registered, []},
   {applications, [
                   kernel,
-                  stdlib
+                  stdlib,
+                  epgsql_poolboy
                  ]},
   {mod, { flyway_app, []}},
   {env, []}
