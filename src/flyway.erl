@@ -23,16 +23,15 @@ run_migrations(Path, PoolName) ->
     MigrationFiles = filelib:wildcard(Path ++ "/**/migration_*.erl"),
     MigrationInTransaction =
         fun(Worker) ->
+                put(pg_worker, Worker),
+                ok = initialize_flyway_schema(),
                 LockTable = "LOCK TABLE migrations IN ACCESS EXCLUSIVE MODE NOWAIT",
                 case pgsql:equery(Worker, LockTable) of
                     {ok, _, _} ->
                         try
-                            put(pg_worker, Worker),
-                            err_pipe([fun initialize_migrations/1,
-                                      fun sort_migrations/1,
+                            err_pipe([fun sort_migrations/1,
                                       fun compile_migrations/1,
-                                      fun execute_migrations/1
-                                     ],
+                                      fun execute_migrations/1],
                                      MigrationFiles)
                         after
                             erase(pg_worker)
@@ -50,14 +49,6 @@ run_migrations(Path, PoolName) ->
         {error, #error{code = Code}} ->
             {error, flyway_postgres_codes:code_to_atom(Code)};
         O -> O
-    end.
-
-initialize_migrations(Migrations) ->
-    case initialize_flyway_schema() of
-        ok ->
-            {ok, Migrations};
-        {error, _} = E ->
-            error(E)
     end.
 
 initialize_flyway_schema() ->
