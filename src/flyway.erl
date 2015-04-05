@@ -31,7 +31,8 @@ run_migrations(Path, PoolName) ->
                             err_pipe([fun initialize_migrations/1,
                                       fun sort_migrations/1,
                                       fun compile_migrations/1,
-                                      fun execute_migrations/1],
+                                      fun execute_migrations/1
+                                     ],
                                      MigrationFiles)
                         after
                             erase(pg_worker)
