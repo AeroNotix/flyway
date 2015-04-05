@@ -1,4 +1,4 @@
--module(migation_001).
+-module(migration_001).
 
 -compile(export_all).
 
