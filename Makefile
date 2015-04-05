@@ -1,27 +1,35 @@
+REBAR = ./rebar
+
 .PHONY: deps test doc
 
 all: deps compile
 
+clean:
+	$(REBAR) clean
+
 compile:
-	rebar compile
+	$(REBAR) compile
 
 compile-fast:
-	rebar compile skip_deps=true
+	$(REBAR) compile skip_deps=true
 
 console:
 	erl -pa deps/*/ebin/ -pa ebin/ -sname flyway
 
 deps:
-	rebar get-deps
+	$(REBAR) get-deps
 
-clean:
-	rebar clean
+ensure-database-exists:
+	@if [ `psql -l -U flyway | grep flyway_migrations  | wc -l` -eq 0 ]; then \
+		createdb -U flyway flyway_migrations; \
+	fi
+	@psql -U flyway -d flyway_migrations < priv/schema.sql
 
 distclean: clean
-	rebar delete-deps
+	$(REBAR) delete-deps
 
-test:
-	rebar skip_deps=true ct
+test: ensure-database-exists
+	$(REBAR) skip_deps=true ct
 
 dialyzer: compile
 	@dialyzer -Wno_undefined_callbacks
