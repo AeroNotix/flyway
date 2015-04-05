@@ -6,6 +6,10 @@
 -define(MUTEX_GRAB_FAIL, <<"55P03">>).
 
 
+migrate(App, PSQLConnectionOpts) when is_list(PSQLConnectionOpts) ->
+    PSQLWorkerOpts = [{size, 1}],
+    epgsql_poolboy:start_pool(?MODULE, PSQLWorkerOpts, PSQLConnectionOpts),
+    migrate(App, ?MODULE);
 migrate(App, PoolName) ->
     case code:priv_dir(App) of
         {error, bad_name} ->
