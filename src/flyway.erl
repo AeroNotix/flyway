@@ -62,8 +62,9 @@ initialize_migrations(Migrations) ->
 initialize_flyway_schema() ->
     Worker = get(pg_worker),
     FlywayPriv = code:priv_dir(flyway),
-    {ok, Schema} = filename:join(FlywayPriv, "schema.sql"),
-    case pgsql:equery(Worker, binary_to_list(Schema)) of
+    Schema = filename:join(FlywayPriv, "schema.sql"),
+    {ok, SchemaContents} = file:read_file(Schema),
+    case pgsql:equery(Worker, binary_to_list(SchemaContents)) of
         {ok, _} ->
             ok;
         {error, #error{code = ?TABLE_EXISTS}} ->
