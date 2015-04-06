@@ -116,7 +116,7 @@ has_migration_ran(Migration) ->
     end.
 
 err_pipe([], Val) ->
-    Val;
+    {ok, Val};
 err_pipe([Fn|Fns], Val) ->
     case Fn(Val) of
         {ok, V} ->
