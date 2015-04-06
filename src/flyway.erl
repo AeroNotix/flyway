@@ -41,7 +41,7 @@ run_migrations(Path, PoolName) ->
         end,
     ok = poolboy:transaction(PoolName, fun initialize_flyway_schema/1),
     case epgsql_poolboy:with_transaction(PoolName, MigrationInTransaction) of
-        ok ->
+        Res when element(1, Res) == ok ->
             ok;
         {error, #error{code = ?MUTEX_GRAB_FAIL}} ->
             timer:sleep(5000),
