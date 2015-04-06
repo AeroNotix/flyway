@@ -56,8 +56,8 @@ initialize_flyway_schema(Worker) ->
     FlywayPriv = code:priv_dir(flyway),
     Schema = filename:join(FlywayPriv, "schema.sql"),
     {ok, SchemaContents} = file:read_file(Schema),
-    case pgsql:equery(Worker, binary_to_list(SchemaContents)) of
-        {ok, _} ->
+    case epgsql_poolboy:equery(Worker, binary_to_list(SchemaContents)) of
+        Res when element(1, Res) == ok ->
             ok;
         {error, #error{code = ?DUPLICATE_TABLE}} ->
             ok;
