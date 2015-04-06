@@ -1,3 +1,3 @@
-CREATE TABLE IF NOT EXISTS migrations (
+CREATE TABLE migrations (
        name varchar(64) PRIMARY KEY
 );
