@@ -41,4 +41,6 @@ t_simple_migration() -> [].
 
 t_simple_migration(Config) ->
     PoolOpts = ?config(pool_opts, Config),
-    ct:pal("~p~n", [flyway:migrate(flyway, PoolOpts)]).
+    Res = flyway:migrate(flyway, PoolOpts),
+    ct:pal("~p", [Res]),
+    ok = Res.

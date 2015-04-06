@@ -86,14 +86,8 @@ extract_mod_name(Migration) ->
 
 execute_migrations(Migrations) ->
     Worker = get(pg_worker),
-    ToExecute =
-        [run_query(Worker, Migration) || Migration <- Migrations],
-    case thread_calls(ToExecute) of
-        ok ->
-            {ok, ok};
-        {error, _} = E->
-            E
-    end.
+    [ok = run_query(Worker, Migration) || Migration <- Migrations],
+    {ok, Migrations}.
 
 run_query(Worker, Migration) ->
     case has_migration_ran(Migration) of
@@ -119,16 +113,6 @@ has_migration_ran(Migration) ->
             false;
         {ok, [_]} ->
             true
-    end.
-thread_calls([]) ->
-    ok;
-thread_calls([Fn|Fns]) ->
-    case Fn() of
-        Res when Res == ok orelse
-                 element(1, Res) == ok ->
-            thread_calls(Fns);
-        {error, _} = E ->
-            E
     end.
 
 err_pipe([], Val) ->
