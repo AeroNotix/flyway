@@ -39,7 +39,7 @@ run_migrations(Path, PoolName) ->
                         E
                 end
         end,
-    poolboy:transaction(PoolName, fun initialize_flyway_schema/1),
+    ok = poolboy:transaction(PoolName, fun initialize_flyway_schema/1),
     case epgsql_poolboy:with_transaction(PoolName, MigrationInTransaction) of
         ok ->
             ok;
