@@ -51,8 +51,8 @@ run_migrations(Path, PoolName) ->
         O -> O
     end.
 
-initialize_flyway_schema() ->
-    Worker = get(pg_worker),
+initialize_flyway_schema(Worker) ->
+    true = is_process_alive(Worker),
     FlywayPriv = code:priv_dir(flyway),
     Schema = filename:join(FlywayPriv, "schema.sql"),
     {ok, SchemaContents} = file:read_file(Schema),
