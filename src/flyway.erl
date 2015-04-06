@@ -101,7 +101,7 @@ run_query(Worker, Migration) ->
                 Res when element(1, Res) == ok ->
                     Insert = "INSERT INTO migrations (name) VALUES($1)",
                     {ok, _} = pgsql:equery(Worker, Insert, [atom_to_list(Migration)]),
-                    Res
+                    ok
             end
     end.
 
