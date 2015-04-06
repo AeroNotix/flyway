@@ -3,9 +3,11 @@
 -compile(export_all).
 
 -include_lib("common_test/include/ct.hrl").
+-include_lib("epgsql/include/pgsql.hrl").
+
 
 suite() ->
-    [{timetrap,{seconds,30}}].
+    [{timetrap,{seconds,10}}].
 
 init_per_suite(Config) ->
     {ok, _} = application:ensure_all_started(flyway),
