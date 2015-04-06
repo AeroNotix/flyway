@@ -4,7 +4,7 @@
 
 -include_lib("epgsql/include/pgsql.hrl").
 -define(MUTEX_GRAB_FAIL, <<"55P03">>).
--define(TABLE_EXISTS, <<"42P07">>).
+-define(DUPLICATE_TABLE, <<"42P07">>).
 
 
 migrate(App, PSQLConnectionOpts) when is_list(PSQLConnectionOpts) ->
@@ -59,7 +59,7 @@ initialize_flyway_schema(Worker) ->
     case pgsql:equery(Worker, binary_to_list(SchemaContents)) of
         {ok, _} ->
             ok;
-        {error, #error{code = ?TABLE_EXISTS}} ->
+        {error, #error{code = ?DUPLICATE_TABLE}} ->
             ok;
         {error, _} = E ->
             E
