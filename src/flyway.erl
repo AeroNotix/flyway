@@ -109,9 +109,9 @@ has_migration_ran(Migration) ->
     Worker = get(pg_worker),
     HasRanQuery = "SELECT has_ran FROM flyway_migrations.migrations WHERE name = $1",
     case pgsql:equery(Worker, HasRanQuery, [Migration]) of
-        {ok, []} ->
+        {ok, _, []} ->
             false;
-        {ok, [_]} ->
+        {ok, _, [_]} ->
             true
     end.
 
